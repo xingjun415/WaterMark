@@ -5,9 +5,6 @@
 
 from PIL import Image, ImageDraw, ImageFont
 
-
-# In[2]:
-
 class WaterMark:
     '''
     This class is used to add water mark to a image

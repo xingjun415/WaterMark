@@ -87,3 +87,11 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+# PyCharm project configure files
+.idea/vcs.xml
+.idea/misc.xml
+.idea/modules.xml
+.idea/watermark.iml
+.idea/workspace.xml
+
