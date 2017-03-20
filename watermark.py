@@ -5,6 +5,9 @@
 
 from PIL import Image, ImageDraw, ImageFont
 
+
+# In[2]:
+
 class WaterMark:
     '''
     This class is used to add water mark to a image
@@ -119,15 +122,12 @@ class WaterMark:
 def main():
     water_mark = WaterMark()
     water_mark.set_font_size(10, False)
-    water_mark.set_fill_rgba((255,255,255,100))
-    img_processed = water_mark.add_text_to_image("./lena.jpg",'版权所有：Junnix')
-    water_mark.save(img_processed, "lena_test.jpg")
+    water_mark.set_fill_rgba((100,100,50,255))
+    img_processed = water_mark.add_text_to_image("./background_spice.png",'版权所有：Junnix')
+    water_mark.save(img_processed, "background_spice_test.jpg")
 
 
 # In[4]:
 
 if __name__== "__main__":
     main()
-
-
-

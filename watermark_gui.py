@@ -13,6 +13,7 @@ class WaterMarkGui:
         self.__input_img_btn = None
         self.__watermark_text = None
         self.__preview_btn = None
+        self.__output_dir = None
         self.__preview_img_label = None
         self.__photo_image = None
         self.__win_width = 600
@@ -24,7 +25,10 @@ class WaterMarkGui:
         self.__create_window(win_width, win_height)
         row_index = 0
         self.__layout_input_images_row(row_index)
-        
+
+        row_index += 1
+        self.__layout_output_directory_row(row_index)
+
         row_index += 1
         self.__layout_watermark_text_row(row_index)
 
@@ -43,6 +47,12 @@ class WaterMarkGui:
     def set_water_mark_text(self, value):
         return self.__watermark_text.set(value)
 
+    def set_output_dir(self, value):
+        self.__output_dir.set(value)
+
+    def get_output_dir(self):
+        return self.__output_dir.get()
+
     def show_preview_image(self, image_path = None, image_object = None):
         if image_path is not None:
             img_to_show = self.__resize_image(Image.open(image_path))
@@ -50,6 +60,8 @@ class WaterMarkGui:
             img_to_show = self.__resize_image(image_object)
         else:
             img_to_show = self.__resize_image( Image.new("RGBA", (self.__win_width // 2, self.__win_height), (255, 0, 0, 255)) )
+        self.__preview_img_label['width'] = 500
+        self.__preview_img_label['height'] = 500
         self.__preview_img_label['image'] = img_to_show
 
     def select_images_to_process(self):
@@ -58,12 +70,34 @@ class WaterMarkGui:
         filenames = filedialog.askdirectory()
         self.__input_images_path.set(filenames)
 
+    def select_output_dir(self):
+        import tkinter.filedialog as filedialog
+        dir = filedialog.askdirectory()
+        self.__output_dir.set(dir)
+
     def bind_preview_btn_call_back(self, func):
         self.__preview_btn.bind("<ButtonRelease>", func)
                 
     def __resize_image(self, img_obj):
-        self.__photo_image = ImageTk.PhotoImage(img_obj)
+        img_width, img_height = img_obj.size
+        img_obj_to_show = None
+        if img_width <= 500 and img_height <= 500:
+            img_obj_to_show = img_obj
+        elif img_width > img_height:
+            scale_ratio = img_width / 500
+            img_height_to_show = int(img_height / scale_ratio)
+            img_obj_to_show = img_obj.resize((500, img_height_to_show), Image.ANTIALIAS)
+        else:  # img_height > img_width
+            scale_ratio = img_height / 500
+            img_width_to_show = int(img_width / scale_ratio)
+            img_obj_to_show = img_obj.resize((img_width_to_show, 500, Image.ANTIALIAS))
+        self.__photo_image = ImageTk.PhotoImage(img_obj_to_show)
         return self.__photo_image
+        '''
+        img_obj_new_size = img_obj.resize((500,500),Image.ANTIALIAS)
+        self.__photo_image = ImageTk.PhotoImage(img_obj_new_size)
+        return self.__photo_image
+        '''
     
     def __create_window(self,width, height):
         screen_width = self.__main_win.winfo_screenwidth()
@@ -90,10 +124,17 @@ class WaterMarkGui:
         
         entry.grid(row=row_index, column = 1, columnspan = 3, padx = 5, pady = 5, sticky = W)
         self.__preview_btn.grid(row = row_index, column = 4, padx = 5, pady = 5, sticky = W)
-    
-    def __layout_preview_image_region(self, row_index, win_width, win_height):  
-        #self.image = "lena.jpg"
-        #photo = self.__get_preview_image("lena.jpg")
+
+    def __layout_output_directory_row(self, row_index):
+        Label(self.__main_win, text="输出目录").grid(row=row_index, padx = 10, pady = 5)
+        self.__output_dir = StringVar()
+        entry = Entry(self.__main_win, textvariable = self.__output_dir, width = 55)
+        select_output_dir_btn = Button(self.__main_win, text = "输出目录", command = self.select_output_dir)
+
+        entry.grid(row = row_index, column = 1, columnspan = 3, padx = 5, pady = 5, sticky = W)
+        select_output_dir_btn.grid(row = row_index, column = 4, padx = 5, pady = 5, sticky = W)
+
+    def __layout_preview_image_region(self, row_index, win_width, win_height):
         self.__preview_img_label = Label(self.__main_win)
         self.__preview_img_label.grid(row = row_index, columnspan = 5, rowspan = 5, padx = 10, pady = 5)
         
@@ -116,8 +157,13 @@ class WaterMarkController:
 
     def preview_btn_callback(self, evt):
         print("preview_btn_callback is called")
-        images_to_process = self.get_images_to_process()
-        print(images_to_process)
+        images_to_process, text_as_watermark= self.get_images_to_process()
+        print("Images to process : ", images_to_process)
+        watermark = WaterMark()
+        watermark.set_fill_rgba((100,100,100,100))
+        image_processed = watermark.add_text_to_image(images_to_process[0], text_as_watermark)
+        win_gui = self.__win_gui()
+        win_gui.show_preview_image(image_object=image_processed)
 
     def get_images_to_process(self):
         win_gui = self.__win_gui()
@@ -129,22 +175,13 @@ class WaterMarkController:
         print("directory is : ", directory)
         filenames = os.listdir(directory)
         print("filenames : ", filenames)
-        return [directory + filename for filename in filenames if self.__is_support_img(filename)]
+        return ([os.path.join(directory, filename) for filename in filenames if self.__is_support_img(filename)], win_gui.get_water_mark_text())
 
     def __is_support_img(self,  filename):
         return os.path.splitext(filename)[1] in self.__supported_images
 
-img = "lena.jpg"
-watermark_gui = WaterMarkGui()
-
-def change_image(evt):
-    print("directory to process : ", watermark_gui.get_images_to_process())
-    '''
-    global img
-    img = "lena.jpg" if img is None else None
-    watermark_gui.show_preview_image(img)
-    '''
 def main():
+    watermark_gui = WaterMarkGui()
     watermark_gui.create_main_gui()
     watermark_controller = WaterMarkController(watermark_gui)
     watermark_gui.bind_preview_btn_call_back(watermark_controller.preview_btn_callback)
