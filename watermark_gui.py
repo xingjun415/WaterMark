@@ -5,6 +5,7 @@
 
 from tkinter import *
 from PIL import Image, ImageTk
+import json
 
 class WaterMarkGui:
     def __init__(self):
@@ -34,6 +35,12 @@ class WaterMarkGui:
 
         row_index += 1
         self.__layout_preview_image_region(row_index, win_width, win_height)
+
+        # read protocol from "config.json"
+        self.__read_protocol()
+
+        # register exit event to save current protocol into "config.json" file
+        self.__main_win.protocol("WM_DELETE_WINDOW", self.__exit_event)
 
     def get_images_to_process(self):
         return self.__input_images_path.get()
@@ -77,7 +84,24 @@ class WaterMarkGui:
 
     def bind_preview_btn_call_back(self, func):
         self.__preview_btn.bind("<ButtonRelease>", func)
-                
+
+    def __read_protocol(self):
+        if os.path.exists("config.json"):
+            with open("config.json", "r") as file:
+                json_dict = json.load(file)
+                self.set_images_to_process(json_dict['input_path'])
+                self.set_water_mark_text(json_dict['watermark_text'])
+                self.set_output_dir(json_dict['output_dir'])
+
+    def __exit_event(self):
+        json_dict = {}
+        json_dict['input_path'] = self.get_images_to_process()
+        json_dict['watermark_text'] = self.get_water_mark_text()
+        json_dict['output_dir'] = self.get_output_dir()
+        with open("config.json", "w") as file:
+            json.dump(json_dict, file)
+            self.__main_win.destroy()
+
     def __resize_image(self, img_obj):
         img_width, img_height = img_obj.size
         img_obj_to_show = None
