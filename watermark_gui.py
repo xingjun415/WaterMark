@@ -1,11 +1,8 @@
-
 # coding: utf-8
-
-# In[ ]:
 
 from tkinter import *
 from PIL import Image, ImageTk
-import json
+import json, os
 
 class WaterMarkGui:
     def __init__(self):
@@ -75,12 +72,14 @@ class WaterMarkGui:
         # Call file open window to select files or directory
         import tkinter.filedialog as filedialog
         filenames = filedialog.askdirectory()
-        self.__input_images_path.set(filenames)
+        if filenames.strip():
+            self.__input_images_path.set(filenames)
 
     def select_output_dir(self):
         import tkinter.filedialog as filedialog
         dir = filedialog.askdirectory()
-        self.__output_dir.set(dir)
+        if dir.strip():
+            self.__output_dir.set(dir)
 
     def bind_preview_btn_call_back(self, func):
         self.__preview_btn.bind("<ButtonRelease>", func)
@@ -117,11 +116,6 @@ class WaterMarkGui:
             img_obj_to_show = img_obj.resize((img_width_to_show, 500, Image.ANTIALIAS))
         self.__photo_image = ImageTk.PhotoImage(img_obj_to_show)
         return self.__photo_image
-        '''
-        img_obj_new_size = img_obj.resize((500,500),Image.ANTIALIAS)
-        self.__photo_image = ImageTk.PhotoImage(img_obj_new_size)
-        return self.__photo_image
-        '''
     
     def __create_window(self,width, height):
         screen_width = self.__main_win.winfo_screenwidth()
@@ -172,6 +166,7 @@ class WaterMarkGui:
         self.__photo_image = ImageTk.PhotoImage(photo)
         return self.__photo_image
 
+'''
 import weakref, os
 from watermark import WaterMark
 class WaterMarkController:
@@ -203,12 +198,15 @@ class WaterMarkController:
 
     def __is_support_img(self,  filename):
         return os.path.splitext(filename)[1] in self.__supported_images
+'''
 
 def main():
     watermark_gui = WaterMarkGui()
     watermark_gui.create_main_gui()
+    '''
     watermark_controller = WaterMarkController(watermark_gui)
     watermark_gui.bind_preview_btn_call_back(watermark_controller.preview_btn_callback)
+    '''
     mainloop()
 
 if __name__ == "__main__":
